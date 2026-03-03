@@ -289,7 +289,7 @@ export function buildSystemPromptParts(userSystemPrompt) {
 
   // 构建反代提示词部分（取决于开关状态）
   const proxyParts = [];
-  const enableProxyPrompt = config.enableProxySystemPrompt !== false;
+  const enableProxyPrompt = config.enableProxySystemPrompt === true;
   if (enableProxyPrompt && proxyPrompt.trim()) {
     proxyParts.push({ text: proxyPrompt.trim() });
   }

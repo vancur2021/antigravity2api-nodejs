@@ -357,6 +357,7 @@ export function buildConfig(jsonConfig) {
     officialPromptPosition: jsonConfig.other?.officialPromptPosition || 'before',
     // 是否合并系统提示词为单个 part，false 则保留多 part 结构（需要先开启 useContextSystemPrompt）
     mergeSystemPrompt: jsonConfig.other?.mergeSystemPrompt !== false,
+    enableProxySystemPrompt: jsonConfig.other?.enableProxySystemPrompt === true,
     skipProjectIdFetch: jsonConfig.other?.skipProjectIdFetch === true,
     useContextSystemPrompt: jsonConfig.other?.useContextSystemPrompt === true,
     passSignatureToClient: jsonConfig.other?.passSignatureToClient === true,
