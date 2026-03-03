@@ -41,6 +41,7 @@
     }
   },
   "defaults": {
+    "useCustomDefaultParams": false,
     "temperature": 1,
     "topP": 1,
     "topK": 50,
@@ -56,6 +57,7 @@
     "forceIPv4": false,
     "skipProjectIdFetch": false,
     "useNativeAxios": false,
+    "enableProxySystemPrompt": false,
     "useContextSystemPrompt": true,
     "officialPromptPosition": "before",
     "mergeSystemPrompt": false,

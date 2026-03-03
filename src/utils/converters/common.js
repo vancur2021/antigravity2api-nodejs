@@ -287,9 +287,10 @@ export function buildSystemPromptParts(userSystemPrompt) {
     }
   }
 
-  // 构建反代提示词部分（可能包含用户请求的 system）
+  // 构建反代提示词部分（取决于开关状态）
   const proxyParts = [];
-  if (proxyPrompt.trim()) {
+  const enableProxyPrompt = config.enableProxySystemPrompt !== false;
+  if (enableProxyPrompt && proxyPrompt.trim()) {
     proxyParts.push({ text: proxyPrompt.trim() });
   }
 

@@ -77,6 +77,26 @@ function handleContextSystemChange() {
     }
 }
 
+function toggleDefaultParamsInputs() {
+    const useDefault = document.getElementById('useCustomDefaultParams')?.checked;
+    const container = document.getElementById('defaultParamsContainer');
+    if (container) {
+        container.classList.toggle('disabled', !useDefault);
+        // 同时设置内部 input 的 disabled 状态，确保表单提交逻辑正确
+        const inputs = container.querySelectorAll('input');
+        inputs.forEach(input => input.disabled = !useDefault);
+    }
+}
+
+function toggleProxySystemPromptInput() {
+    const enabled = document.getElementById('enableProxySystemPrompt')?.checked;
+    const textarea = document.getElementById('proxySystemPrompt');
+    if (textarea) {
+        textarea.readOnly = !enabled;
+        textarea.classList.toggle('disabled', !enabled);
+    }
+}
+
 function toggleRequestCountInput() {
     const strategy = document.getElementById('rotationStrategy').value;
     const requestCountGroup = document.getElementById('requestCountGroup');
@@ -135,20 +155,24 @@ async function loadConfig() {
                 if (form.elements['API_USE']) form.elements['API_USE'].value = json.api.use || 'sandbox';
             }
             if (json.defaults) {
+                if (form.elements['USE_CUSTOM_DEFAULT_PARAMS']) form.elements['USE_CUSTOM_DEFAULT_PARAMS'].checked = json.defaults.useCustomDefaultParams || false;
                 if (form.elements['DEFAULT_TEMPERATURE']) form.elements['DEFAULT_TEMPERATURE'].value = json.defaults.temperature ?? '';
                 if (form.elements['DEFAULT_TOP_P']) form.elements['DEFAULT_TOP_P'].value = json.defaults.topP ?? '';
                 if (form.elements['DEFAULT_TOP_K']) form.elements['DEFAULT_TOP_K'].value = json.defaults.topK ?? '';
                 if (form.elements['DEFAULT_MAX_TOKENS']) form.elements['DEFAULT_MAX_TOKENS'].value = json.defaults.maxTokens ?? '';
                 if (form.elements['DEFAULT_THINKING_BUDGET']) form.elements['DEFAULT_THINKING_BUDGET'].value = json.defaults.thinkingBudget ?? '';
+                toggleDefaultParamsInputs();
             }
             if (json.other) {
                 if (form.elements['TIMEOUT']) form.elements['TIMEOUT'].value = json.other.timeout ?? '';
                 if (form.elements['RETRY_TIMES']) form.elements['RETRY_TIMES'].value = json.other.retryTimes ?? '';
                 if (form.elements['SKIP_PROJECT_ID_FETCH']) form.elements['SKIP_PROJECT_ID_FETCH'].checked = json.other.skipProjectIdFetch || false;
                 if (form.elements['USE_NATIVE_AXIOS']) form.elements['USE_NATIVE_AXIOS'].checked = json.other.useNativeAxios !== false;
+                if (form.elements['ENABLE_PROXY_SYSTEM_PROMPT']) form.elements['ENABLE_PROXY_SYSTEM_PROMPT'].checked = json.other.enableProxySystemPrompt || false;
                 if (form.elements['USE_CONTEXT_SYSTEM_PROMPT']) form.elements['USE_CONTEXT_SYSTEM_PROMPT'].checked = json.other.useContextSystemPrompt || false;
                 if (form.elements['MERGE_SYSTEM_PROMPT']) form.elements['MERGE_SYSTEM_PROMPT'].checked = json.other.mergeSystemPrompt !== false;
                 if (form.elements['OFFICIAL_PROMPT_POSITION']) form.elements['OFFICIAL_PROMPT_POSITION'].value = json.other.officialPromptPosition || 'before';
+                toggleProxySystemPromptInput();
                 if (form.elements['PASS_SIGNATURE_TO_CLIENT']) form.elements['PASS_SIGNATURE_TO_CLIENT'].checked = json.other.passSignatureToClient || false;
                 if (form.elements['USE_FALLBACK_SIGNATURE']) form.elements['USE_FALLBACK_SIGNATURE'].checked = json.other.useFallbackSignature || false;
                 if (form.elements['CACHE_ALL_SIGNATURES']) form.elements['CACHE_ALL_SIGNATURES'].checked = json.other.cacheAllSignatures || false;
@@ -289,6 +313,8 @@ async function saveConfig(e) {
     };
 
     // 处理checkbox：未选中的checkbox不会出现在FormData中
+    jsonConfig.defaults.useCustomDefaultParams = form.elements['USE_CUSTOM_DEFAULT_PARAMS']?.checked || false;
+    jsonConfig.other.enableProxySystemPrompt = form.elements['ENABLE_PROXY_SYSTEM_PROMPT']?.checked || false;
     jsonConfig.other.skipProjectIdFetch = form.elements['SKIP_PROJECT_ID_FETCH']?.checked || false;
     jsonConfig.other.useNativeAxios = form.elements['USE_NATIVE_AXIOS']?.checked || false;
     jsonConfig.api = { use: form.elements['API_USE']?.value || 'sandbox' };

@@ -28,11 +28,12 @@ import { REASONING_EFFORT_MAP } from '../constants/index.js';
  * @returns {NormalizedParameters}
  */
 export function normalizeOpenAIParameters(params = {}) {
+  const useCustom = config.defaults.useCustomDefaultParams !== false;
   const normalized = {
-    max_tokens: params.max_tokens ?? config.defaults.max_tokens,
-    temperature: params.temperature ?? config.defaults.temperature,
-    top_p: params.top_p ?? config.defaults.top_p,
-    top_k: params.top_k ?? config.defaults.top_k,
+    max_tokens: params.max_tokens ?? (useCustom ? config.defaults.max_tokens : undefined),
+    temperature: params.temperature ?? (useCustom ? config.defaults.temperature : undefined),
+    top_p: params.top_p ?? (useCustom ? config.defaults.top_p : undefined),
+    top_k: params.top_k ?? (useCustom ? config.defaults.top_k : undefined),
     response_format: params.response_format,
   };
 
@@ -60,12 +61,13 @@ export function normalizeOpenAIParameters(params = {}) {
  */
 export function normalizeClaudeParameters(params = {}) {
   const { max_tokens, temperature, top_p, top_k, thinking, ...rest } = params;
+  const useCustom = config.defaults.useCustomDefaultParams !== false;
   
   const normalized = {
-    max_tokens: max_tokens ?? config.defaults.max_tokens,
-    temperature: temperature ?? config.defaults.temperature,
-    top_p: top_p ?? config.defaults.top_p,
-    top_k: top_k ?? config.defaults.top_k,
+    max_tokens: max_tokens ?? (useCustom ? config.defaults.max_tokens : undefined),
+    temperature: temperature ?? (useCustom ? config.defaults.temperature : undefined),
+    top_p: top_p ?? (useCustom ? config.defaults.top_p : undefined),
+    top_k: top_k ?? (useCustom ? config.defaults.top_k : undefined),
   };
 
   // 处理 Claude 的 thinking 参数
@@ -98,11 +100,12 @@ export function normalizeClaudeParameters(params = {}) {
  * @returns {NormalizedParameters}
  */
 export function normalizeGeminiParameters(generationConfig = {}) {
+  const useCustom = config.defaults.useCustomDefaultParams !== false;
   const normalized = {
-    max_tokens: generationConfig.maxOutputTokens ?? config.defaults.max_tokens,
-    temperature: generationConfig.temperature ?? config.defaults.temperature,
-    top_p: generationConfig.topP ?? config.defaults.top_p,
-    top_k: generationConfig.topK ?? config.defaults.top_k,
+    max_tokens: generationConfig.maxOutputTokens ?? (useCustom ? config.defaults.max_tokens : undefined),
+    temperature: generationConfig.temperature ?? (useCustom ? config.defaults.temperature : undefined),
+    top_p: generationConfig.topP ?? (useCustom ? config.defaults.top_p : undefined),
+    top_k: generationConfig.topK ?? (useCustom ? config.defaults.top_k : undefined),
   };
 
   // 处理 Gemini 的 thinkingConfig 参数

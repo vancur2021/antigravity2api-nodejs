@@ -1144,6 +1144,85 @@ html.tab-logs .content {
     font-weight: 600;
 }
 
+.section-header-with-switch {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.section-header-with-switch h4 {
+    margin-bottom: 0;
+}
+
+.label-with-switch {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.label-with-switch label {
+    margin-bottom: 0;
+}
+
+.label-with-switch .switch-group {
+    flex: 0 1 auto;
+    min-width: auto;
+}
+
+.switch-label-mini {
+    font-size: 0.65rem;
+    color: var(--text-light);
+    margin-right: 4px;
+}
+
+.switch-group.mini.no-bg {
+    background: transparent;
+    border: none;
+    padding: 0;
+    min-width: auto;
+    min-height: auto;
+}
+
+#proxySystemPrompt.disabled {
+    opacity: 0.5;
+    background-color: rgba(0, 0, 0, 0.03);
+    cursor: not-allowed;
+}
+
+@media (prefers-color-scheme: dark) {
+    #proxySystemPrompt.disabled {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+}
+
+.params-container {
+    transition: all 0.3s ease;
+}
+
+.params-container.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(1);
+}
+
+.switch-group.mini {
+    min-width: auto;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.switch-group.mini:hover {
+    box-shadow: none;
+}
+
+.switch-group.mini label:first-child {
+    font-size: 0.7rem;
+    color: var(--text-light);
+}
+
 .form-row-inline {
     display: grid;
     grid-template-columns: 1fr 1fr;
