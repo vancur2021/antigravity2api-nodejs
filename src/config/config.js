@@ -327,7 +327,8 @@ export function buildConfig(jsonConfig) {
     log: {
       maxSizeMB: jsonConfig.log?.maxSizeMB || 10,    // 单个日志文件最大 MB
       maxFiles: jsonConfig.log?.maxFiles || 5,       // 保留历史文件数
-      maxMemory: jsonConfig.log?.maxMemory || 500    // 内存中保留条数
+      maxMemory: jsonConfig.log?.maxMemory || 500,   // 内存中保留条数
+      recordPayload: jsonConfig.log?.recordPayload === true // 是否记录请求/返回详情
     },
     imageBaseUrl: process.env.IMAGE_BASE_URL || null,
     maxImages: jsonConfig.other?.maxImages || DEFAULT_MAX_IMAGES,

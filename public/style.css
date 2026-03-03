@@ -2810,6 +2810,59 @@ input:checked+.slider:before {
     border-radius: 0.125rem;
 }
 
+/* 日志详情 Payload 样式 */
+.log-item.has-payload {
+    cursor: pointer;
+    position: relative;
+}
+
+.log-item.has-payload:hover {
+    background: rgba(8, 145, 178, 0.05);
+}
+
+.log-payload-toggle {
+    font-size: 0.65rem;
+    color: var(--primary);
+    background: rgba(8, 145, 178, 0.1);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    margin-left: 0.5rem;
+    font-weight: 600;
+}
+
+.log-payload {
+    display: none;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border);
+    animation: slideDown 0.2s ease-out;
+}
+
+.log-payload.visible {
+    display: block;
+}
+
+.log-payload-content {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    font-size: 0.7rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+@media (prefers-color-scheme: dark) {
+    .log-payload-content {
+        background: rgba(255, 255, 255, 0.05);
+    }
+}
+
+.log-payload-content pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
 /* 日志空状态 */
 .log-empty {
     text-align: center;

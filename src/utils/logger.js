@@ -42,7 +42,7 @@ function logMessage(level, ...args) {
   logWsServer.storeLog(level, message);
 }
 
-function logRequest(method, path, status, duration) {
+function logRequest(method, path, status, duration, payload = null) {
   const statusColor = status >= 500 ? colors.red : status >= 400 ? colors.yellow : colors.green;
   const message = `[${method}] - ${path} ${status} ${duration}ms`;
 
@@ -51,7 +51,7 @@ function logRequest(method, path, status, duration) {
 
   // 存储日志（根据状态码决定级别）
   const level = status >= 500 ? 'error' : status >= 400 ? 'warn' : 'request';
-  logWsServer.storeLog(level, message);
+  logWsServer.storeLog(level, message, payload);
 }
 
 export const log = {

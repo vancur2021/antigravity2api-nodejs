@@ -366,6 +366,8 @@
                                     oninput="searchLogs(this.value)">
                             </div>
                             <div class="log-action-btns">
+                                <button id="recordPayloadBtn" class="btn btn-sm btn-secondary"
+                                    onclick="toggleRecordPayload()" title="是否记录请求和返回的详细内容">📜 记录详情: 关</button>
                                 <button id="autoRefreshBtn" class="btn btn-sm btn-secondary"
                                     onclick="toggleAutoRefresh()" title="每3秒自动刷新日志">🔄 自动刷新</button>
                                 <button class="btn btn-sm btn-info" onclick="loadLogs(); loadLogStats();"

@@ -136,6 +136,55 @@ function loadMoreLogs() {
     loadLogs(true);
 }
 
+// 切换 Payload 记录
+async function toggleRecordPayload() {
+    const btn = document.getElementById('recordPayloadBtn');
+    const isEnabled = btn.classList.contains('active');
+    const newState = !isEnabled;
+
+    try {
+        const response = await fetch('/admin/config', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                json: {
+                    log: {
+                        recordPayload: newState
+                    }
+                }
+            }),
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            updateRecordPayloadBtn(newState);
+            showToast(`Payload 详情记录已${newState ? '开启' : '关闭'}`, 'success');
+        } else {
+            throw new Error(data.message || '更新配置失败');
+        }
+    } catch (error) {
+        console.error('切换 Payload 记录失败:', error);
+        showToast('切换失败: ' + error.message, 'error');
+    }
+}
+
+// 更新记录按钮 UI 状态
+function updateRecordPayloadBtn(enabled) {
+    const btn = document.getElementById('recordPayloadBtn');
+    if (!btn) return;
+
+    if (enabled) {
+        btn.classList.add('active');
+        btn.innerHTML = '📜 记录详情: 开';
+    } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '📜 记录详情: 关';
+    }
+}
+
 // 切换自动刷新
 function toggleAutoRefresh() {
     logsState.autoRefresh = !logsState.autoRefresh;
@@ -284,17 +333,26 @@ function renderLogs() {
             message = message.replace(regex, '<mark>$1</mark>');
         }
 
+        const hasPayload = log.payload ? true : false;
         return `
-            <div class="log-item ${levelClass}" data-log-index="${index}">
+            <div class="log-item ${levelClass} ${hasPayload ? 'has-payload' : ''}" data-log-index="${index}" ${hasPayload ? `onclick="toggleLogPayload('${log.id}')"` : ''}>
                 <div class="log-item-header">
                     <span class="log-level-icon">${levelIcon}</span>
                     <span class="log-level-tag ${levelClass}">${log.level.toUpperCase()}</span>
                     <span class="log-time">${time}</span>
-                    <button class="log-copy-btn" onclick="copyLogContent(${index}, this)" title="复制日志内容">
+                    ${hasPayload ? '<span class="log-payload-toggle">🔍 详情</span>' : ''}
+                    <button class="log-copy-btn" onclick="event.stopPropagation(); copyLogContent(${index}, this)" title="复制日志内容">
                         📋
                     </button>
                 </div>
                 <div class="log-message">${message}</div>
+                ${hasPayload ? `
+                <div class="log-payload" id="payload-${log.id}" onclick="event.stopPropagation()">
+                    <div class="log-payload-content">
+                        <pre><code>${escapeHtml(JSON.stringify(log.payload, null, 2))}</code></pre>
+                    </div>
+                </div>
+                ` : ''}
             </div>
         `;
     }).join('');
@@ -500,15 +558,28 @@ function appendLogToDOM(log) {
         message = message.replace(regex, '<mark>$1</mark>');
     }
 
+    const hasPayload = log.payload ? true : false;
     const logElement = document.createElement('div');
-    logElement.className = `log-item ${levelClass}`;
+    logElement.className = `log-item ${levelClass} ${hasPayload ? 'has-payload' : ''}`;
+    if (hasPayload) {
+        logElement.onclick = () => toggleLogPayload(log.id);
+    }
+    
     logElement.innerHTML = `
         <div class="log-item-header">
             <span class="log-level-icon">${levelIcon}</span>
             <span class="log-level-tag ${levelClass}">${log.level.toUpperCase()}</span>
             <span class="log-time">${time}</span>
+            ${hasPayload ? '<span class="log-payload-toggle">🔍 详情</span>' : ''}
         </div>
         <div class="log-message">${message}</div>
+        ${hasPayload ? `
+        <div class="log-payload" id="payload-${log.id}" onclick="event.stopPropagation()">
+            <div class="log-payload-content">
+                <pre><code>${escapeHtml(JSON.stringify(log.payload, null, 2))}</code></pre>
+            </div>
+        </div>
+        ` : ''}
     `;
 
     // 追加到底部
@@ -516,6 +587,14 @@ function appendLogToDOM(log) {
 
     // 滚动到底部
     container.scrollTop = container.scrollHeight;
+}
+
+// 切换日志详情显示
+function toggleLogPayload(id) {
+    const payloadEl = document.getElementById(`payload-${id}`);
+    if (payloadEl) {
+        payloadEl.classList.toggle('visible');
+    }
 }
 
 // 更新统计
@@ -563,11 +642,22 @@ function disconnectLogWebSocket() {
 }
 
 // 初始化日志页面
-function initLogsPage() {
+async function initLogsPage() {
     // 优先使用 WebSocket 实时推送
     connectLogWebSocket();
     // 加载统计（始终需要）
     loadLogStats();
+
+    // 加载当前配置状态
+    try {
+        const response = await fetch('/admin/config', { credentials: 'include' });
+        const data = await response.json();
+        if (data.success && data.data.json.log) {
+            updateRecordPayloadBtn(data.data.json.log.recordPayload === true);
+        }
+    } catch (e) {
+        console.error('加载日志配置失败:', e);
+    }
 }
 
 // 清理日志页面（切换离开时）

@@ -124,13 +124,17 @@ class LogWebSocketServer {
     /**
      * 存储日志条目
      */
-    storeLog(level, message) {
+    storeLog(level, message, payload = null) {
         const entry = {
             id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
             timestamp: new Date().toISOString(),
             level,
             message
         };
+
+        if (payload) {
+            entry.payload = payload;
+        }
 
         // 存储到内存
         this.logStore.push(entry);
@@ -151,7 +155,11 @@ class LogWebSocketServer {
      * 缓冲写入（减少磁盘 I/O）
      */
     _bufferWrite(entry) {
-        const line = `${entry.timestamp} [${entry.level}] ${entry.message}\n`;
+        let line = `${entry.timestamp} [${entry.level}] ${entry.message}`;
+        if (entry.payload) {
+            line += ` | PAYLOAD: ${JSON.stringify(entry.payload)}`;
+        }
+        line += '\n';
         this.writeBuffer.push(line);
 
         // 设置定时刷新

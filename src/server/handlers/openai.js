@@ -33,6 +33,9 @@ import {
 export const handleOpenAIRequest = async (req, res) => {
   const body = req.body || {};
   const { messages, model, stream = false, tools, ...params } = body;
+  const startTime = Date.now();
+  const requestPayload = { ...body };
+  // 隐藏敏感信息或过大的数据（可选）
 
   try {
     const validation = validateIncomingChatRequest('openai', body);
@@ -137,6 +140,13 @@ export const handleOpenAIRequest = async (req, res) => {
 
         clearInterval(heartbeatTimer);
         endStream(res);
+        // 记录请求日志（根据配置决定是否包含 payload）
+        const duration = Date.now() - startTime;
+        const payload = config.log?.recordPayload ? {
+          request: requestPayload,
+          response: { type: 'stream', status: 'completed' }
+        } : null;
+        logger.request(req.method, req.originalUrl.split('?')[0], res.statusCode, duration, payload);
       } catch (error) {
         clearInterval(heartbeatTimer);
         if (!res.writableEnded) {
@@ -192,7 +202,7 @@ export const handleOpenAIRequest = async (req, res) => {
           }
         }
 
-        res.json(createOpenAIChatCompletionResponse({
+        const responseData = createOpenAIChatCompletionResponse({
           id,
           created,
           model,
@@ -203,7 +213,16 @@ export const handleOpenAIRequest = async (req, res) => {
           usage: usageData,
           passSignatureToClient: config.passSignatureToClient,
           stripToolCallSignature: !config.passSignatureToClient
-        }));
+        });
+        res.json(responseData);
+
+        // 记录请求日志
+        const duration = Date.now() - startTime;
+        const payload = config.log?.recordPayload ? {
+          request: requestPayload,
+          response: responseData
+        } : null;
+        logger.request(req.method, req.originalUrl.split('?')[0], res.statusCode, duration, payload);
       } catch (error) {
         logger.error('假非流生成响应失败:', error.message);
         if (res.headersSent) return;
@@ -237,7 +256,7 @@ export const handleOpenAIRequest = async (req, res) => {
       }
 
       // 使用预构建的响应对象，减少内存分配
-      res.json(createOpenAIChatCompletionResponse({
+      const responseData = createOpenAIChatCompletionResponse({
         id,
         created,
         model,
@@ -248,7 +267,16 @@ export const handleOpenAIRequest = async (req, res) => {
         usage,
         passSignatureToClient: config.passSignatureToClient,
         stripToolCallSignature: !config.passSignatureToClient
-      }));
+      });
+      res.json(responseData);
+
+      // 记录请求日志
+      const duration = Date.now() - startTime;
+      const payload = config.log?.recordPayload ? {
+        request: requestPayload,
+        response: responseData
+      } : null;
+      logger.request(req.method, req.originalUrl.split('?')[0], res.statusCode, duration, payload);
     }
   } catch (error) {
     logger.error('生成响应失败:', error.message);
