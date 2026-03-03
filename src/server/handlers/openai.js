@@ -87,12 +87,16 @@ export const handleOpenAIRequest = async (req, res) => {
       const heartbeatTimer = createHeartbeat(res);
 
       try {
+        let fullContent = '';
+        let fullReasoning = '';
+
         if (isImageModel) {
           const { content, usage, reasoningSignature } = await with429Retry(
             () => generateAssistantResponseNoStream(requestBody, token),
             safeRetries,
             createRetryOptions('chat.stream.image ')
           );
+          fullContent = content || '';
           const delta = { content };
           if (reasoningSignature && config.passSignatureToClient) {
             delta.thoughtSignature = reasoningSignature;
@@ -108,6 +112,7 @@ export const handleOpenAIRequest = async (req, res) => {
               if (data.type === 'usage') {
                 usageData = data.usage;
               } else if (data.type === 'reasoning') {
+                fullReasoning += data.reasoning_content || '';
                 const delta = { reasoning_content: data.reasoning_content };
                 if (data.thoughtSignature && config.passSignatureToClient) {
                   delta.thoughtSignature = data.thoughtSignature;
@@ -127,6 +132,7 @@ export const handleOpenAIRequest = async (req, res) => {
                 const delta = { tool_calls: toolCallsWithIndex };
                 writeStreamData(res, createStreamChunk(id, created, model, delta));
               } else {
+                fullContent += data.content || '';
                 const delta = { content: data.content };
                 writeStreamData(res, createStreamChunk(id, created, model, delta));
               }
@@ -144,7 +150,12 @@ export const handleOpenAIRequest = async (req, res) => {
         const duration = Date.now() - startTime;
         const payload = config.log?.recordPayload ? {
           request: requestPayload,
-          response: { type: 'stream', status: 'completed' }
+          response: {
+            type: 'stream',
+            status: 'completed',
+            content: fullContent,
+            reasoning_content: fullReasoning || undefined
+          }
         } : null;
         logger.request(req.method, req.originalUrl.split('?')[0], res.statusCode, duration, payload);
       } catch (error) {

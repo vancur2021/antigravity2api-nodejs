@@ -52,6 +52,8 @@ export const createClaudeStreamEvent = (eventType, data) => {
 export const handleClaudeRequest = async (req, res, isStream) => {
   const body = req.body || {};
   const { messages, model, system, tools, ...rawParams } = body;
+  const startTime = Date.now();
+  const requestPayload = { ...body };
 
   try {
     const validation = validateIncomingChatRequest('claude', body);
@@ -161,6 +163,14 @@ export const handleClaudeRequest = async (req, res, isStream) => {
 
           clearInterval(heartbeatTimer);
           res.end();
+
+          // 记录请求日志
+          const duration = Date.now() - startTime;
+          const payload = config.log?.recordPayload ? {
+            request: requestPayload,
+            response: { type: 'stream', status: 'completed' }
+          } : null;
+          logger.request(req.method, req.originalUrl.split('?')[0], res.statusCode, duration, payload);
           return;
         }
 
@@ -304,6 +314,14 @@ export const handleClaudeRequest = async (req, res, isStream) => {
 
         clearInterval(heartbeatTimer);
         res.end();
+
+        // 记录请求日志
+        const duration = Date.now() - startTime;
+        const payload = config.log?.recordPayload ? {
+          request: requestPayload,
+          response: { type: 'stream', status: 'completed' }
+        } : null;
+        logger.request(req.method, req.originalUrl.split('?')[0], res.statusCode, duration, payload);
       } catch (error) {
         clearInterval(heartbeatTimer);
         if (!res.writableEnded) {
@@ -359,6 +377,14 @@ export const handleClaudeRequest = async (req, res, isStream) => {
         );
 
         res.json(response);
+
+        // 记录请求日志
+        const duration = Date.now() - startTime;
+        const payload = config.log?.recordPayload ? {
+          request: requestPayload,
+          response: response
+        } : null;
+        logger.request(req.method, req.originalUrl.split('?')[0], res.statusCode, duration, payload);
       } catch (error) {
         logger.error('Claude 假非流请求失败:', error.message);
         if (res.headersSent) return;
@@ -390,6 +416,14 @@ export const handleClaudeRequest = async (req, res, isStream) => {
       );
 
       res.json(response);
+
+      // 记录请求日志
+      const duration = Date.now() - startTime;
+      const payload = config.log?.recordPayload ? {
+        request: requestPayload,
+        response: response
+      } : null;
+      logger.request(req.method, req.originalUrl.split('?')[0], res.statusCode, duration, payload);
     }
   } catch (error) {
     logger.error('Claude 请求失败:', error.message);

@@ -101,9 +101,11 @@ export const handleGeminiModelDetail = async (req, res) => {
  */
 export const handleGeminiRequest = async (req, res, modelName, isStream) => {
   const safeRetries = getSafeRetries(config.retryTimes);
+  const startTime = Date.now();
 
   try {
     const body = req.body || {};
+    const requestPayload = { ...body };
     const validation = validateIncomingChatRequest('gemini', body);
     if (!validation.ok) {
       return res.status(validation.status).json(buildGeminiErrorPayload({ message: validation.message }, validation.status));
@@ -192,6 +194,14 @@ export const handleGeminiRequest = async (req, res, modelName, isStream) => {
 
         clearInterval(heartbeatTimer);
         endStream(res, false);
+
+        // 记录请求日志
+        const duration = Date.now() - startTime;
+        const payload = config.log?.recordPayload ? {
+          request: requestPayload,
+          response: { type: 'stream', status: 'completed' }
+        } : null;
+        logger.request(req.method, req.originalUrl.split('?')[0], res.statusCode, duration, payload);
       } catch (error) {
         clearInterval(heartbeatTimer);
         if (!res.writableEnded) {
@@ -236,6 +246,14 @@ export const handleGeminiRequest = async (req, res, modelName, isStream) => {
         const finishReason = "STOP";
         const response = createGeminiResponse(content, reasoningContent || null, reasoningSignature, toolCalls, finishReason, usageData, { passSignatureToClient: config.passSignatureToClient });
         res.json(response);
+
+        // 记录请求日志
+        const duration = Date.now() - startTime;
+        const payload = config.log?.recordPayload ? {
+          request: requestPayload,
+          response: response
+        } : null;
+        logger.request(req.method, req.originalUrl.split('?')[0], res.statusCode, duration, payload);
       } catch (error) {
         logger.error('Gemini 假非流请求失败:', error.message);
         if (res.headersSent) return;
@@ -256,6 +274,14 @@ export const handleGeminiRequest = async (req, res, modelName, isStream) => {
       const finishReason = toolCalls.length > 0 ? "STOP" : "STOP";
       const response = createGeminiResponse(content, reasoningContent, reasoningSignature, toolCalls, finishReason, usage, { passSignatureToClient: config.passSignatureToClient });
       res.json(response);
+
+      // 记录请求日志
+      const duration = Date.now() - startTime;
+      const payload = config.log?.recordPayload ? {
+        request: requestPayload,
+        response: response
+      } : null;
+      logger.request(req.method, req.originalUrl.split('?')[0], res.statusCode, duration, payload);
     }
   } catch (error) {
     logger.error('Gemini 请求失败:', error.message);
