@@ -91,10 +91,17 @@ function convertToToolCall(functionCall, sessionId, model) {
 // 同时透传 thoughtSignature，方便客户端后续复用
 // 签名和思考内容绑定存储：收集完整思考内容后和签名一起缓存
 function parseAndEmitStreamChunk(line, state, callback) {
-  if (!line.startsWith(DATA_PREFIX)) return;
+  // 稳健处理：过滤 SSE 注释和心跳行（以 : 开头），并兼容非 data: 前缀的 JSON 响应
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith(':')) return;
+
+  let jsonStr = line;
+  if (line.startsWith(DATA_PREFIX)) {
+    jsonStr = line.slice(DATA_PREFIX_LEN);
+  }
   
   try {
-    const data = JSON.parse(line.slice(DATA_PREFIX_LEN));
+    const data = JSON.parse(jsonStr);
     const parts = data.response?.candidates?.[0]?.content?.parts;
     
     if (parts) {
@@ -167,12 +174,12 @@ function parseAndEmitStreamChunk(line, state, callback) {
           }
         });
       }
-      // 清空累积的思考内容和状态
+      // 清空累积的思考内容 and 状态
       state.reasoningContent = '';
       state.hasToolCalls = false;
     }
   } catch {
-    // 忽略 JSON 解析错误
+    // 忽略 JSON 解析错误（可能是心跳或部分行数据）
   }
 }
 
