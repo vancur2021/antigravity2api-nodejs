@@ -179,6 +179,38 @@ export function pushModelMessage({ parts, toolCalls, hasContent }, antigravityMe
 }
 
 /**
+ * 检查并注入 googleSearch 工具
+ * @param {Array} contents - 消息内容数组
+ * @param {Array} tools - 工具数组
+ * @returns {Array} 更新后的工具数组
+ */
+export function injectGoogleSearchTool(contents, tools) {
+  const googleKeywordRegex = /(@google|@谷歌|@Google)/gi;
+  let isGoogleSearchRequest = false;
+  
+  const lastContent = contents?.[contents.length - 1];
+  if (lastContent?.parts) {
+    for (const part of lastContent.parts) {
+      if (part?.text && googleKeywordRegex.test(part.text)) {
+        isGoogleSearchRequest = true;
+        part.text = part.text.replace(googleKeywordRegex, '').trim();
+        break; 
+      }
+    }
+  }
+
+  let updatedTools = tools || [];
+  if (isGoogleSearchRequest) {
+    const hasGoogleSearch = updatedTools.some(t => t.googleSearch);
+    if (!hasGoogleSearch) {
+      updatedTools.push({ googleSearch: {} });
+    }
+  }
+  
+  return updatedTools;
+}
+
+/**
  * 构建基础请求体
  * @param {Object} options - 选项
  * @param {Array} options.contents - 消息内容
@@ -191,6 +223,7 @@ export function pushModelMessage({ parts, toolCalls, hasContent }, antigravityMe
  * @returns {Object} 请求体
  */
 export function buildRequestBody({ contents, tools, generationConfig, sessionId, systemInstruction }, token, actualModelName) {
+  tools = injectGoogleSearchTool(contents, tools);
   const hasTools = tools && tools.length > 0;
 
   const requestBody = {
@@ -209,7 +242,10 @@ export function buildRequestBody({ contents, tools, generationConfig, sessionId,
   // 只在有工具时才添加 tools 和 toolConfig 字段
   if (hasTools) {
     requestBody.request.tools = tools;
-    requestBody.request.toolConfig = { functionCallingConfig: { mode: 'VALIDATED' } };
+    // 仅当存在自定义函数声明时才添加 functionCallingConfig
+    if (tools.some(t => t.functionDeclarations)) {
+      requestBody.request.toolConfig = { functionCallingConfig: { mode: 'VALIDATED' } };
+    }
   }
 
   // 构建系统提示词
