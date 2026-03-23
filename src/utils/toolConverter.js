@@ -100,6 +100,8 @@ export function convertGeminiToolsToAntigravity(geminiTools, sessionId, actualMo
   if (!geminiTools || geminiTools.length === 0) return [];
   
   const allDeclarations = [];
+  const otherTools = [];
+  
   for (const tool of geminiTools) {
     // 格式1: 已经是 functionDeclarations 格式（支持驼峰和下划线命名）
     const declarations = tool.functionDeclarations || tool.function_declarations;
@@ -123,10 +125,19 @@ export function convertGeminiToolsToAntigravity(geminiTools, sessionId, actualMo
         )
       );
     }
-    // 格式3：不处理
+    // 格式3：内置工具（如 googleSearch, codeExecution 等）
+    else {
+      otherTools.push(tool);
+    }
   }
   
-  return allDeclarations.length > 0 ? [{
-    functionDeclarations: allDeclarations
-  }] : [];
+  const result = [];
+  if (allDeclarations.length > 0) {
+    result.push({ functionDeclarations: allDeclarations });
+  }
+  if (otherTools.length > 0) {
+    result.push(...otherTools);
+  }
+  
+  return result;
 }
