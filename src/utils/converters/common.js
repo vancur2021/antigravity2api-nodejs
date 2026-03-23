@@ -191,7 +191,7 @@ export function injectGoogleSearchTool(contents, tools) {
   const lastContent = contents?.[contents.length - 1];
   if (lastContent?.parts) {
     for (const part of lastContent.parts) {
-      if (part?.text && googleKeywordRegex.test(part.text)) {
+      if (part?.text && part.text.match(googleKeywordRegex)) {
         isGoogleSearchRequest = true;
         part.text = part.text.replace(googleKeywordRegex, '').trim();
         break; 
@@ -199,11 +199,19 @@ export function injectGoogleSearchTool(contents, tools) {
     }
   }
 
-  let updatedTools = tools || [];
+  let updatedTools = tools;
   if (isGoogleSearchRequest) {
+    // 如果没有 tools，或者 tools 不是数组，则初始化为空数组
+    if (!updatedTools || !Array.isArray(updatedTools)) {
+      updatedTools = [];
+    }
+
+    // 注入三个配套工具
     const hasGoogleSearch = updatedTools.some(t => t.googleSearch);
     if (!hasGoogleSearch) {
       updatedTools.push({ googleSearch: {} });
+      updatedTools.push({ urlContext: {} });
+      updatedTools.push({ codeExecution: {} });
     }
   }
   
