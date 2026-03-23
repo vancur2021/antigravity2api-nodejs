@@ -2,7 +2,7 @@
 import config from '../../config/config.js';
 import { generateRequestId } from '../idGenerator.js';
 import { convertGeminiToolsToAntigravity } from '../toolConverter.js';
-import { getSignatureContext, createThoughtPart, modelMapping, isEnableThinking, buildSystemInstruction } from './common.js';
+import { getSignatureContext, createThoughtPart, modelMapping, isEnableThinking, buildSystemInstruction, injectGoogleSearchTool } from './common.js';
 import { normalizeGeminiParameters, toGenerationConfig } from '../parameterNormalizer.js';
 
 /**
@@ -168,6 +168,9 @@ export function generateGeminiRequestBody(geminiBody, modelName, token) {
   request.generationConfig = toGenerationConfig(normalizedParams, enableThinking, actualModelName);
   request.sessionId = token.sessionId;
   delete request.safetySettings;
+
+  // 注入 googleSearch 工具
+  request.tools = injectGoogleSearchTool(request.contents, request.tools);
 
   // 添加工具配置（仅当存在自定义函数声明时才添加 functionCallingConfig）
   if (request.tools && request.tools.some(t => t.functionDeclarations) && !request.toolConfig) {

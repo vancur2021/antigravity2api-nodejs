@@ -187,13 +187,16 @@ export function pushModelMessage({ parts, toolCalls, hasContent }, antigravityMe
 export function injectGoogleSearchTool(contents, tools) {
   const googleKeywordRegex = /(@google|@谷歌|@Google)/gi;
   let isGoogleSearchRequest = false;
+  let googleSearchText = '';
   
   const lastContent = contents?.[contents.length - 1];
   if (lastContent?.parts) {
     for (const part of lastContent.parts) {
-      if (part?.text && part.text.match(googleKeywordRegex)) {
+      if (part?.text && googleKeywordRegex.test(part.text)) {
         isGoogleSearchRequest = true;
-        part.text = part.text.replace(googleKeywordRegex, '').trim();
+        // 重置正则的 lastIndex，因为 test() 会改变它
+        googleKeywordRegex.lastIndex = 0;
+        googleSearchText = part.text.replace(googleKeywordRegex, '').trim();
         break; 
       }
     }
@@ -201,18 +204,21 @@ export function injectGoogleSearchTool(contents, tools) {
 
   let updatedTools = tools;
   if (isGoogleSearchRequest) {
-    // 如果没有 tools，或者 tools 不是数组，则初始化为空数组
-    if (!updatedTools || !Array.isArray(updatedTools)) {
-      updatedTools = [];
+    // 替换文本
+    for (const part of lastContent.parts) {
+      if (part?.text && googleKeywordRegex.test(part.text)) {
+        part.text = googleSearchText;
+        break;
+      }
     }
 
+    // 强制清空原有工具，避免其他工具干扰搜索
+    updatedTools = [];
+
     // 注入三个配套工具
-    const hasGoogleSearch = updatedTools.some(t => t.googleSearch);
-    if (!hasGoogleSearch) {
-      updatedTools.push({ googleSearch: {} });
-      updatedTools.push({ urlContext: {} });
-      updatedTools.push({ codeExecution: {} });
-    }
+    updatedTools.push({ googleSearch: {} });
+    updatedTools.push({ urlContext: {} });
+    updatedTools.push({ codeExecution: {} });
   }
   
   return updatedTools;
