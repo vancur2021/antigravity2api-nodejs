@@ -169,8 +169,8 @@ export function generateGeminiRequestBody(geminiBody, modelName, token) {
   request.sessionId = token.sessionId;
   delete request.safetySettings;
 
-  // 添加工具配置
-  if (request.tools && request.tools.length > 0 && !request.toolConfig) {
+  // 添加工具配置（仅当存在自定义函数声明时才添加 functionCallingConfig）
+  if (request.tools && request.tools.some(t => t.functionDeclarations) && !request.toolConfig) {
     request.toolConfig = { functionCallingConfig: { mode: 'VALIDATED' } };
   }
 
