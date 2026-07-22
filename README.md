@@ -595,6 +595,8 @@ curl http://localhost:8045/v1/chat/completions \
 |`HTTP_PROXY`/`HTTPS_PROXY` | ❌ |
 | `SYSTEM_INSTRUCTION` | 系统提示词 | ❌ |
 | `IMAGE_BASE_URL` | 图片服务基础 URL | ❌ |
+| `REFRESH_TOKENS` | 初始化 Refresh Token 列表，使用逗号分隔。适用于容器重启自动导入场景 | ❌ |
+| `INITIAL_ACCOUNTS` | 使用完整 JSON 数组字符串导入账号。优先级高于 `REFRESH_TOKENS` | ❌ |
 
 完整配置示例请参考 `.env.example` 文件。
 

@@ -56,7 +56,45 @@ class TokenManager {
   async _initialize() {
     try {
       log.info('正在初始化token管理器...');
-      const tokenArray = await this.store.readAll();
+      let tokenArray = await this.store.readAll();
+
+      // 如果本地没有 token 记录，尝试从环境变量导入
+      if (!tokenArray || tokenArray.length === 0) {
+        const initialAccountsStr = process.env.INITIAL_ACCOUNTS;
+        const refreshTokensStr = process.env.REFRESH_TOKENS;
+        
+        let imported = false;
+        
+        if (initialAccountsStr) {
+          try {
+            const parsed = JSON.parse(initialAccountsStr);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              tokenArray = parsed;
+              imported = true;
+              log.info(`从 INITIAL_ACCOUNTS 环境变量自动导入 ${parsed.length} 个账号`);
+            }
+          } catch (e) {
+            log.error('解析 INITIAL_ACCOUNTS 环境变量失败:', e.message);
+          }
+        } else if (refreshTokensStr) {
+          const tokensList = refreshTokensStr.split(',').map(t => t.trim()).filter(Boolean);
+          if (tokensList.length > 0) {
+            tokenArray = tokensList.map(rt => ({
+              access_token: 'pending', // 占位，启动后自动刷新
+              refresh_token: rt,
+              expires_in: 0,
+              timestamp: 0,
+              enable: true
+            }));
+            imported = true;
+            log.info(`从 REFRESH_TOKENS 环境变量自动导入 ${tokensList.length} 个账号`);
+          }
+        }
+        
+        if (imported) {
+          await this.store.writeAll(tokenArray);
+        }
+      }
 
       this.tokens = tokenArray.filter(token => token.enable !== false).map(token => ({
         ...token,
