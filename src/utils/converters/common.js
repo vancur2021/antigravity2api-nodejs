@@ -137,7 +137,8 @@ export function createFunctionCallPart(id, name, args, signature = null) {
     }
   };
   if (signature) {
-    part.thoughtSignature = signature;
+    part.functionCall.thoughtSignature = signature;
+    part.thoughtSignature = signature; // keep both just in case downstream processing relies on it at root
   }
   return part;
 }

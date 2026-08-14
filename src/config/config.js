@@ -364,7 +364,7 @@ export function buildConfig(jsonConfig) {
     skipProjectIdFetch: jsonConfig.other?.skipProjectIdFetch === true,
     useContextSystemPrompt: jsonConfig.other?.useContextSystemPrompt === true,
     passSignatureToClient: jsonConfig.other?.passSignatureToClient === true,
-    useFallbackSignature: jsonConfig.other?.useFallbackSignature === true,
+    useFallbackSignature: jsonConfig.other?.useFallbackSignature !== false,
     // 签名缓存配置（新版）
     cacheAllSignatures: jsonConfig.other?.cacheAllSignatures === true ||
       process.env.CACHE_ALL_SIGNATURES === '1' ||
